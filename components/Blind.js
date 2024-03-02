@@ -66,7 +66,7 @@ const Blind = () => {
           type: 'image/jpeg', // Set the correct MIME type for the image file
         });
 
-        const response = await fetch('https://6fc2-112-196-37-184.ngrok-free.app/photo', {
+        const response = await fetch('https://1920-112-196-37-184.ngrok-free.app/photo', {
           method: 'POST',
           body: formData,
           headers: {

@@ -63,7 +63,7 @@ export default function Deaf() {
             type: 'audio/mp4',
           });
 
-          const response = await fetch('https://e778-112-196-37-184.ngrok-free.app/audio', {
+          const response = await fetch('https://1920-112-196-37-184.ngrok-free.app/audio', {
             method: 'POST',
             body: formData,
             headers: {
