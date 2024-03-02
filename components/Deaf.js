@@ -1,78 +1,147 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, Button } from 'react-native';
 import { Audio } from 'expo-av';
-import { Speech } from 'expo';
+import * as FileSystem from 'expo-file-system';
 
-const Deaf = () => {
-  const [recording, setRecording] = useState();
+export default function Deaf() {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcription, setTranscription] = useState('');
-
+  const [recording, setRecording] = useState(null);
+  const [sound, setSound] = useState(null);
+  const [responseText, setResponseText] = useState('');
+  const handleResponse = (result) => {
+    // Update the state with the response
+    setResponseText(result.result);
+  };
+ 
   useEffect(() => {
+
+
     return () => {
-      if (recording) {
-        stopRecording();
+      if (sound) {
+        sound.unloadAsync();
       }
     };
-  }, []);
+  }, [sound]);
 
   const startRecording = async () => {
     try {
-      console.log('Requesting permissions..');
-      await Audio.requestPermissionsAsync();
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      console.log('Starting recording...');
-      const recordingObject = new Audio.Recording();
-      await recordingObject.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
-      await recordingObject.startAsync();
-      setRecording(recordingObject);
       setIsRecording(true);
-      console.log('Recording started');
-      await transcribeRecording(recordingObject.getURI());
-    } catch (err) {
-      console.error('Failed to start recording', err);
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to record audio not granted');
+        return;
+      }
+      const newRecording = new Audio.Recording();
+      await newRecording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+      await newRecording.startAsync();
+      setRecording(newRecording);
+    } catch (error) {
+      console.error('Failed to start recording', error);
     }
   };
 
   const stopRecording = async () => {
-    console.log('Stopping recording...');
     setIsRecording(false);
     try {
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      console.log('Recording stopped and stored at', uri);
-    } catch (err) {
-      console.error('Failed to stop recording', err);
+      if (recording) {
+        await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
+        if (uri) {
+          const fileName = 'recorded_audio.mp4';
+          const downloadDirectory = `${FileSystem.documentDirectory}Download/`;
+          await FileSystem.makeDirectoryAsync(downloadDirectory, { intermediates: true });
+          const downloadUri = downloadDirectory + fileName;
+          await FileSystem.moveAsync({
+            from: uri,
+            to: downloadUri,
+          });
+          console.log(`Recorded audio saved in Downloads folder ${downloadUri} `);
+          
+          // Send the audio file to localhost:5000/audio
+          const formData = new FormData();
+          formData.append('file', {
+            uri: downloadUri,
+            name: fileName,
+            type: 'audio/mp4',
+          });
+  
+          const response = await fetch('https://e778-112-196-37-184.ngrok-free.app/audio', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+  
+          // Log the result
+          const result = await response.json();
+          console.log('Response:', result);
+          handleResponse(result);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to stop recording or send audio', error);
     }
   };
-
-  const transcribeRecording = async (uri) => {
-    try {
-      const { transcription } = await Speech.recognizeAsync({
-        uri,
-        language: 'en-US',
-      });
-      console.log('Transcription:', transcription);
-      setTranscription(transcription);
-    } catch (err) {
-      console.error('Failed to transcribe recording', err);
-    }
-  };
+  
+  
 
   return (
-    <View >
-      <Text >Button 1 Screen</Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>{isRecording ? 'Recording...' : 'Press Record to Start'}</Text>
       <Button
         title={isRecording ? 'Stop Recording' : 'Start Recording'}
         onPress={isRecording ? stopRecording : startRecording}
       />
-      <Text>{transcription}</Text>
+      {responseText ? <Text>{responseText}</Text> : null}
     </View>
   );
-};
+}
 
-export default Deaf;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const fetchData = async () => {
+  //   try {
+  //     const response = await fetch('https://e778-112-196-37-184.ngrok-free.app/');
+  //     if (!response.ok) {
+  //       throw new Error('Network response was not ok');
+  //     }
+  //     const data = await response.json();
+  //     console.log(data);
+  //   } catch (error) {
+  //     console.error('Error fetching data:', error);
+  //   }
+  // };
+  // fetchData()
