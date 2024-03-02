@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-
+import { LinearGradient } from 'expo-linear-gradient';
 const Home = ({ navigation }) => {
   return (
+   
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
@@ -14,7 +15,7 @@ const Home = ({ navigation }) => {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: '#008000', marginBottom: 10 }]}
+          style={[styles.button, { backgroundColor: '#4ebdd9', marginBottom: 10 }]}
           onPress={() => navigation.navigate('Deaf')}
         >
           <Text style={styles.buttonText}>       Deaf</Text>
@@ -25,7 +26,7 @@ const Home = ({ navigation }) => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: '#008000', marginBottom: 10 }]}
+          style={[styles.button, { backgroundColor: '#4ebdd9', marginBottom: 10 }]}
           onPress={() => navigation.navigate('Blind')}
         >
           <Text style={styles.buttonText}>  Blind</Text>
@@ -43,13 +44,14 @@ const Home = ({ navigation }) => {
 
       {}
     </View>
+  
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -66,7 +68,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#000',
     marginHorizontal: -60,
 
   },
