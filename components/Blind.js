@@ -11,9 +11,13 @@ const Blind = () => {
   const [ranOnce, setRanOnce] = useState(false);
   const cameraRef = useRef(null);
   const speak = (ss) => {
-    const s = ss;
-    Speech.speak(s);
+    const thingToSay = ss;
+    const speakOptions = {
+      rate: 0.5, // Adjust the rate to slow down the speech (0.5 is half of the normal speed)
+    };
+    Speech.speak(thingToSay, speakOptions);
   };
+  
   
 
 
@@ -62,7 +66,7 @@ const Blind = () => {
           type: 'image/jpeg', // Set the correct MIME type for the image file
         });
 
-        const response = await fetch('https://e778-112-196-37-184.ngrok-free.app/photo', {
+        const response = await fetch('https://6fc2-112-196-37-184.ngrok-free.app/photo', {
           method: 'POST',
           body: formData,
           headers: {
