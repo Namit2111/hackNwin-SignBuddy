@@ -1,127 +1,96 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
-import { Camera } from 'expo-camera';
-import * as MediaLibrary from 'expo-media-library';
-import * as Speech from 'expo-speech';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, StyleSheet } from 'react-native';
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 
-const Blind = () => {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [capturedPhoto, setCapturedPhoto] = useState(null);
-  const [ranOnce, setRanOnce] = useState(false);
-  const cameraRef = useRef(null);
-  const speak = (ss) => {
-    const thingToSay = ss;
-    const speakOptions = {
-      rate: 0.7, // Adjust the rate to slow down the speech (0.5 is half of the normal speed)
-    };
-    Speech.speak(thingToSay, speakOptions);
+export default function Deaf() {
+  const [isRecording, setIsRecording] = useState(false);
+  const [recording, setRecording] = useState(null);
+  const [sound, setSound] = useState(null);
+  const [responseText, setResponseText] = useState('');
+  const handleResponse = (result) => {
+    // Update the state with the response
+    setResponseText(result.result);
   };
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!ranOnce) {
-      const timeoutId = setTimeout(() => {
-        takePicture();
-        setRanOnce(true); // Set the state to true after the initial run
-      }, 3000);
-
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }
-  }, [ranOnce]);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      takePicture();
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const takePicture = async () => {
-    if (cameraRef.current) {
-      try {
-        const { uri } = await cameraRef.current.takePictureAsync({
-          playSoundOnCapture: false, // Disable the shutter sound
-        });
-        console.log('Photo taken:', uri);
-        setCapturedPhoto(uri);
-        await MediaLibrary.saveToLibraryAsync(uri);
-
-        // Send the photo file to localhost:5000/video
-        const formData = new FormData();
-        formData.append('file', {
-          uri: uri,
-          name: 'photo.jpg',
-          type: 'image/jpeg', // Set the correct MIME type for the image file
-        });
-
-        const response = await fetch('https://1920-112-196-37-184.ngrok-free.app/photo', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        const res = await response.json();
-        console.log(res.result);
-        speak(res.result);
-        // console.log('Server response:', response.result);
-      } catch (error) {
-        console.error('Failed to take picture:', error);
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
       }
+    };
+  }, [sound]);
+
+  const startRecording = async () => {
+    try {
+      setIsRecording(true);
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to record audio not granted');
+        return;
+      }
+      const newRecording = new Audio.Recording();
+      await newRecording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+      await newRecording.startAsync();
+      setRecording(newRecording);
+    } catch (error) {
+      console.error('Failed to start recording', error);
     }
   };
 
-  if (hasPermission === null) {
-    return <View />;
-  }
-  if (hasPermission === false) {
-    return <Text>No access to camera</Text>;
-  }
+  const stopRecording = async () => {
+    setIsRecording(false);
+    try {
+      if (recording) {
+        await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
+        if (uri) {
+          const fileName = 'recorded_audio.mp4';
+          const downloadDirectory = `${FileSystem.documentDirectory}Download/`;
+          await FileSystem.makeDirectoryAsync(downloadDirectory, { intermediates: true });
+          const downloadUri = downloadDirectory + fileName;
+          await FileSystem.moveAsync({
+            from: uri,
+            to: downloadUri,
+          });
+          console.log(`Recorded audio saved in Downloads folder ${downloadUri} `);
+
+          // Send the audio file to localhost:5000/audio
+          const formData = new FormData();
+          formData.append('file', {
+            uri: downloadUri,
+            name: fileName,
+            type: 'audio/mp4',
+          });
+
+          const response = await fetch('https://1920-112-196-37-184.ngrok-free.app/audio', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+
+          // Log the result
+          const result = await response.json();
+          console.log('Response:', result);
+          handleResponse(result);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to stop recording or send audio', error);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Camera 
-        style={styles.camera} 
-        type={Camera.Constants.Type.back} 
-        ref={cameraRef} 
-        onCameraReady={() => {
-          cameraRef.current?.camera?.startPreview(); // Start the camera preview
-        }}
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Recognizer: Start speaking when ready</Text>
+      <Text>{isRecording ? 'Recording...' : 'Press Record to Start'}</Text>
+      <Button
+        title={isRecording ? 'Stop Recording' : 'Start Recording'}
+        onPress={isRecording ? stopRecording : startRecording}
       />
-      {capturedPhoto && (
-        <View style={styles.previewContainer}>
-          <Image source={{ uri: capturedPhoto }} style={styles.previewImage} />
-        </View>
-      )}
+      {responseText ? <Text>{responseText}</Text> : null}
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-  },
-  camera: {
-    flex: 1,
-  },
-  previewContainer: {
-    alignItems: 'center',
-  },
-  previewImage: {
-    width: 200,
-    height: 200,
-    marginTop: 20,
-  },
-});
-
-export default Blind;
+}
