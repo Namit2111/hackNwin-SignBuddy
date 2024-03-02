@@ -1,25 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import * as Speech from 'expo-speech';
 
 const Blind = () => {
   const [hasPermission, setHasPermission] = useState(null);
-  const [type, setType] = useState(Camera.Constants.Type.back);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [ranOnce, setRanOnce] = useState(false);
   const cameraRef = useRef(null);
   const speak = (ss) => {
     const thingToSay = ss;
     const speakOptions = {
-      rate: 0.5, // Adjust the rate to slow down the speech (0.5 is half of the normal speed)
+      rate: 0.7, // Adjust the rate to slow down the speech (0.5 is half of the normal speed)
     };
     Speech.speak(thingToSay, speakOptions);
   };
-  
-  
-
 
   useEffect(() => {
     (async () => {
@@ -27,6 +23,7 @@ const Blind = () => {
       setHasPermission(status === 'granted');
     })();
   }, []);
+
   useEffect(() => {
     if (!ranOnce) {
       const timeoutId = setTimeout(() => {
@@ -39,10 +36,8 @@ const Blind = () => {
       };
     }
   }, [ranOnce]);
-  
 
   useEffect(() => {
-
     const intervalId = setInterval(() => {
       takePicture();
     }, 30000);
@@ -53,7 +48,9 @@ const Blind = () => {
   const takePicture = async () => {
     if (cameraRef.current) {
       try {
-        const { uri } = await cameraRef.current.takePictureAsync();
+        const { uri } = await cameraRef.current.takePictureAsync({
+          playSoundOnCapture: false, // Disable the shutter sound
+        });
         console.log('Photo taken:', uri);
         setCapturedPhoto(uri);
         await MediaLibrary.saveToLibraryAsync(uri);
@@ -66,7 +63,7 @@ const Blind = () => {
           type: 'image/jpeg', // Set the correct MIME type for the image file
         });
 
-        const response = await fetch('https://6fc2-112-196-37-184.ngrok-free.app/photo', {
+        const response = await fetch('https://1920-112-196-37-184.ngrok-free.app/photo', {
           method: 'POST',
           body: formData,
           headers: {
@@ -90,23 +87,16 @@ const Blind = () => {
     return <Text>No access to camera</Text>;
   }
 
-  const flipCamera = () => {
-    setType(
-      type === Camera.Constants.Type.back
-        ? Camera.Constants.Type.front
-        : Camera.Constants.Type.back
-    );
-  };
-
   return (
     <View style={styles.container}>
-      <Camera style={styles.camera} type={type} ref={cameraRef}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={flipCamera}> 
-            <Text style={styles.text}>Flip Camera</Text>
-          </TouchableOpacity>
-        </View>
-      </Camera>
+      <Camera 
+        style={styles.camera} 
+        type={Camera.Constants.Type.back} 
+        ref={cameraRef} 
+        onCameraReady={() => {
+          cameraRef.current?.camera?.startPreview(); // Start the camera preview
+        }}
+      />
       {capturedPhoto && (
         <View style={styles.previewContainer}>
           <Image source={{ uri: capturedPhoto }} style={styles.previewImage} />
@@ -123,21 +113,6 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    marginBottom: 20,
-  },
-  button: {
-    padding: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  text: {
-    fontSize: 18,
-    color: 'white',
   },
   previewContainer: {
     alignItems: 'center',
