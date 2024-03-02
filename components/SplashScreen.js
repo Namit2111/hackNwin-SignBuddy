@@ -3,20 +3,17 @@ import { View, Image, StyleSheet } from 'react-native';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
-    // Simulate a delay, e.g., fetching data or performing some initialization
     const timer = setTimeout(() => {
-      // Navigate to HomeScreen after the delay
       navigation.replace('Home');
-    }, 2000); // Adjust the delay time as needed (in milliseconds)
+    }, 2000);
 
-    // Clear the timeout when the component is unmounted
     return () => clearTimeout(timer);
   }, [navigation]);
 
   return (
     <View style={styles.container}>
       <Image
-        source={require('../assets/splashScreen.png')} // Replace 'splash.png' with your actual splash screen image
+        source={require('../assets/splash.png')}
         style={styles.image}
       />
     </View>
@@ -30,9 +27,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
+    flex: 1,
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
+    resizeMode: 'cover',
   },
 });
 

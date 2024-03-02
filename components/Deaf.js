@@ -12,10 +12,8 @@ export default function Deaf() {
     // Update the state with the response
     setResponseText(result.result);
   };
- 
+
   useEffect(() => {
-
-
     return () => {
       if (sound) {
         sound.unloadAsync();
@@ -56,7 +54,7 @@ export default function Deaf() {
             to: downloadUri,
           });
           console.log(`Recorded audio saved in Downloads folder ${downloadUri} `);
-          
+
           // Send the audio file to localhost:5000/audio
           const formData = new FormData();
           formData.append('file', {
@@ -64,7 +62,7 @@ export default function Deaf() {
             name: fileName,
             type: 'audio/mp4',
           });
-  
+
           const response = await fetch('https://e778-112-196-37-184.ngrok-free.app/audio', {
             method: 'POST',
             body: formData,
@@ -72,7 +70,7 @@ export default function Deaf() {
               'Content-Type': 'multipart/form-data',
             },
           });
-  
+
           // Log the result
           const result = await response.json();
           console.log('Response:', result);
@@ -83,11 +81,10 @@ export default function Deaf() {
       console.error('Failed to stop recording or send audio', error);
     }
   };
-  
-  
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Recognizer: Start speaking when ready</Text>
       <Text>{isRecording ? 'Recording...' : 'Press Record to Start'}</Text>
       <Button
         title={isRecording ? 'Stop Recording' : 'Start Recording'}
@@ -97,51 +94,3 @@ export default function Deaf() {
     </View>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const fetchData = async () => {
-  //   try {
-  //     const response = await fetch('https://e778-112-196-37-184.ngrok-free.app/');
-  //     if (!response.ok) {
-  //       throw new Error('Network response was not ok');
-  //     }
-  //     const data = await response.json();
-  //     console.log(data);
-  //   } catch (error) {
-  //     console.error('Error fetching data:', error);
-  //   }
-  // };
-  // fetchData()
