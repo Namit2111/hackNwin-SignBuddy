@@ -5,11 +5,11 @@ const Home = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Button
-        title="Go to Button 1 Screen"
+        title="Deaf"
         onPress={() => navigation.navigate('Deaf')}
       />
       <Button
-        title="Go to Button 2 Screen"
+        title="Blind"
         onPress={() => navigation.navigate('Blind')}
       />
     </View>
