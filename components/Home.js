@@ -100,12 +100,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  image: {
-    width: '95%', 
-    height: (300 / 445) * 100 + '%', 
-    resizeMode: 'cover',
-    alignSelf: 'center',
-  },
+  
+  
 });
 
 export default Home;
