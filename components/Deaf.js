@@ -3,11 +3,20 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 
-export default function Deaf() {
+export default function Deaf({navigation}) {
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState(null);
   const [sound, setSound] = useState(null);
   const [responseText, setResponseText] = useState('');
+  // const [responseText, setResponseText] = useState('');
+  const [savedNotes, setSavedNotes] = useState([]);
+
+  const handleSaveNote = () => {
+    const updatedNotes = [...savedNotes, responseText]; // Add the new note to the array of saved notes
+    setSavedNotes(updatedNotes);
+    navigation.navigate('Notes', { savedNotes: updatedNotes }); // Pass all saved notes to the Notes screen
+  };
+
 
   const handleResponse = (result) => {
     setResponseText(result.result);
@@ -88,17 +97,13 @@ export default function Deaf() {
       <View style={styles.topButtonsContainer}>
         <TouchableOpacity
           style={styles.topButton}
-          onPress={() => {
-            // Handle button press
-          }}
+          onPress={() => navigation.navigate('Notes')}
         >
           <Text style={styles.topButtonText}>Notes</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.topButton}
-          onPress={() => {
-            // Handle button press
-          }}
+          onPress={handleSaveNote}
         >
           <Text style={styles.topButtonText}>Save Notes</Text>
         </TouchableOpacity>

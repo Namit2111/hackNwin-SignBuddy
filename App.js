@@ -5,6 +5,7 @@ import Blind from './components/Blind';
 import Deaf from './components/Deaf';
 import Home from './components/Home';
 import SplashScreen from './components/SplashScreen';
+import Notes from './components/Notes';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,6 +17,7 @@ const App = () => {
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Deaf" component={Deaf} />
         <Stack.Screen name="Blind" component={Blind} />
+        <Stack.Screen name="Notes" component={Notes} />
       </Stack.Navigator>
     </NavigationContainer>
   );
